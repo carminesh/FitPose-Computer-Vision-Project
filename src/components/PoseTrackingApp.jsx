@@ -3,7 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
 import { Pose } from "@mediapipe/pose";
 import * as cam from "@mediapipe/camera_utils";
+
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
+import { countSquats } from "./squatCounter";
+import { countPushups } from "./pushUpCounter";
 
 function PoseTrackingApp() {
   const [squatStatus, setSquatStatus] = useState("");
@@ -13,7 +16,18 @@ function PoseTrackingApp() {
   const location = useLocation();
   const { exerciseType } = location.state || {};
   const [status, setStatus] = useState("");
+
   const cameraRef = useRef(null); // To keep track of the camera instance
+  const [squatData, setSquatData] = useState({
+    squatCount: 0,
+    squatFlag: false,
+  });
+  const [pushupData, setPushupData] = useState({
+    pushupCount: 0,
+    pushupFlag: false,
+  });
+
+  
 
   const checkSquatPosition = (landmarks) => {
     const hipLeft = landmarks[23];
@@ -34,8 +48,6 @@ function PoseTrackingApp() {
     } else {
       setSquatStatus("Incorrect position");
     }
-
-    
   };
 
   const checkPushUpPosition = (landmarks) => {
@@ -133,13 +145,20 @@ function PoseTrackingApp() {
 
     if (exerciseType === "Squat") {
       checkSquatPosition(results.poseLandmarks);
+      const newState = countSquats(results.poseLandmarks, squatData);
+      setSquatData(newState); // Aggiorna lo stato
+
     } else if (exerciseType === "PushUp") {
       checkPushUpPosition(results.poseLandmarks);
+      const newState = countPushups(results.poseLandmarks, pushupData);
+      setPushupData(newState); // Aggiorna lo stato con il nuovo conteggio
     }
 
     canvasCtx.restore();
+
   };
 
+  
   useEffect(() => {
     let pose;
     let cameraInitialized = false;
@@ -163,10 +182,9 @@ function PoseTrackingApp() {
       }
     };
 
-    pose = new Pose({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
-    });
+    pose = new Pose({locateFile: (file) => {
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+    }});
 
     pose.setOptions({
       modelComplexity: 1,
@@ -186,7 +204,7 @@ function PoseTrackingApp() {
         cameraRef.current = null;
       }
     };
-  }, [exerciseType]);
+  }, [exerciseType, squatData, pushupData]);
 
   return (
     <div
@@ -250,6 +268,7 @@ function PoseTrackingApp() {
         <p>{exerciseType} Analysis</p>
         {squatStatus && <p>{squatStatus}</p>}
         {status && <p>{status}</p>}
+        
       </div>
     </div>
   );
