@@ -43,7 +43,9 @@ function PoseTrackingApp() {
     const kneesInFrontOfAnkles =
       kneeLeft.y < ankleLeft.y && kneeRight.y < ankleRight.y;
 
+    
     if (hipsLowerThanKnees && kneesInFrontOfAnkles) {
+      console.log("hipsLowerThanKnees: ", hipsLowerThanKnees, "kneesInFrontOfAnkles: ", kneesInFrontOfAnkles);
       setSquatStatus("Correct position");
     } else {
       setSquatStatus("Incorrect position");
@@ -144,14 +146,20 @@ function PoseTrackingApp() {
 
 
     if (exerciseType === "Squat") {
+
       checkSquatPosition(results.poseLandmarks);
-      const newState = countSquats(results.poseLandmarks, squatData);
-      setSquatData(newState); // Aggiorna lo stato
+      setSquatData(prevState => {
+        const newState = countSquats(results.poseLandmarks, prevState);
+        console.log("Stato aggiornato:", newState);
+        return newState;
+      });
 
     } else if (exerciseType === "PushUp") {
-      checkPushUpPosition(results.poseLandmarks);
-      const newState = countPushups(results.poseLandmarks, pushupData);
-      setPushupData(newState); // Aggiorna lo stato con il nuovo conteggio
+      setPushupData(prevState => {
+        const newState = countPushups(results.poseLandmarks, prevState);
+        console.log("Stato aggiornato:", newState);
+        return newState;
+      });
     }
 
     canvasCtx.restore();
@@ -183,9 +191,9 @@ function PoseTrackingApp() {
     };
 
     pose = new Pose({locateFile: (file) => {
-      return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`;
     }});
-
+    
     pose.setOptions({
       modelComplexity: 1,
       smoothLandmarks: true,
@@ -204,7 +212,14 @@ function PoseTrackingApp() {
         cameraRef.current = null;
       }
     };
-  }, [exerciseType, squatData, pushupData]);
+  }, [exerciseType]);
+
+  useEffect(() => {
+      console.log("squatData: ", squatData.squatCount);
+    if (pushupData.pushupCount > 0) {
+      console.log("pushupData: ", pushupData.pushupCount);
+    }
+  }, [squatData, pushupData]);
 
   return (
     <div
@@ -268,7 +283,8 @@ function PoseTrackingApp() {
         <p>{exerciseType} Analysis</p>
         {squatStatus && <p>{squatStatus}</p>}
         {status && <p>{status}</p>}
-        
+        {squatData && <p>{squatData.squatCount}</p>}
+        {pushupData && <p>{pushupData.pushupCount}</p>}
       </div>
     </div>
   );
