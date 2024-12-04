@@ -10,6 +10,7 @@ import { countPushups } from "./pushUpCounter";
 
 function PoseTrackingApp() {
   const [squatStatus, setSquatStatus] = useState("");
+  const [exercType, setExercType] = useState("");
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const navigate = useNavigate();
@@ -45,7 +46,6 @@ function PoseTrackingApp() {
 
     
     if (hipsLowerThanKnees && kneesInFrontOfAnkles) {
-      console.log("hipsLowerThanKnees: ", hipsLowerThanKnees, "kneesInFrontOfAnkles: ", kneesInFrontOfAnkles);
       setSquatStatus("Correct position");
     } else {
       setSquatStatus("Incorrect position");
@@ -144,10 +144,11 @@ function PoseTrackingApp() {
       canvasCtx.stroke();
     });
 
-
+    setExercType(exerciseType);
     if (exerciseType === "Squat") {
 
       checkSquatPosition(results.poseLandmarks);
+      
       setSquatData(prevState => {
         const newState = countSquats(results.poseLandmarks, prevState);
         console.log("Stato aggiornato:", newState);
@@ -215,7 +216,10 @@ function PoseTrackingApp() {
   }, [exerciseType]);
 
   useEffect(() => {
+    if (squatData.squatCount > 0) {
       console.log("squatData: ", squatData.squatCount);
+    }
+
     if (pushupData.pushupCount > 0) {
       console.log("pushupData: ", pushupData.pushupCount);
     }
@@ -283,8 +287,24 @@ function PoseTrackingApp() {
         <p>{exerciseType} Analysis</p>
         {squatStatus && <p>{squatStatus}</p>}
         {status && <p>{status}</p>}
-        {squatData && <p>{squatData.squatCount}</p>}
-        {pushupData && <p>{pushupData.pushupCount}</p>}
+        <div
+        style={{
+          position: "absolute",
+          top: "-75px",
+          left: "1px",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          color: "white",
+          padding: "10px 15px",
+          borderRadius: "5px",
+          fontSize: "18px",
+        }}
+        >
+          {exercType === "Squat" ? (
+            <p>{squatData.squatCount}</p>
+          ) : (
+            <p>{pushupData.pushupCount}</p>
+          )}
+        </div>
       </div>
     </div>
   );
