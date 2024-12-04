@@ -301,8 +301,8 @@ function PoseTrackingApp() {
         {status && <p>{status}</p>}
         <div
         style={{
-          position: "absolute",
-          top: "-75px",
+          position: "relative",
+          top: "-175px",
           left: "1px",
           backgroundColor: "rgba(0, 0, 0, 0.5)",
           color: "white",
