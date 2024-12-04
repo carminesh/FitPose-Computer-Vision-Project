@@ -151,14 +151,14 @@ function PoseTrackingApp() {
       
       setSquatData(prevState => {
         const newState = countSquats(results.poseLandmarks, prevState);
-        console.log("Stato aggiornato:", newState);
+        //console.log("Stato aggiornato:", newState);
         return newState;
       });
 
     } else if (exerciseType === "PushUp") {
       setPushupData(prevState => {
         const newState = countPushups(results.poseLandmarks, prevState);
-        console.log("Stato aggiornato:", newState);
+        //console.log("Stato aggiornato:", newState);
         return newState;
       });
     }
@@ -225,6 +225,18 @@ function PoseTrackingApp() {
     }
   }, [squatData, pushupData]);
 
+ // Function to stop the webcam
+  const stopWebcam = () => {
+    cameraRef.current.stop();
+    cameraRef.current = null;
+  };
+
+  const resetState = () => {
+    stopWebcam(); // ferma la webcam se attiva
+    navigate("/");
+  };
+
+
   return (
     <div
       className="App"
@@ -237,7 +249,7 @@ function PoseTrackingApp() {
       }}
     >
       <button
-        onClick={() => navigate("/")}
+        onClick={() => resetState()}
         style={{
           position: "absolute",
           top: "10px",
