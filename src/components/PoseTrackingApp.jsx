@@ -3,14 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Webcam from 'react-webcam';
 import { Pose } from '@mediapipe/pose';
 import * as cam from '@mediapipe/camera_utils';
-
+import Rive from '@rive-app/react-canvas';
 import { drawLandmarks } from '@mediapipe/drawing_utils';
 import { Box, Button, Typography } from '@mui/material';
 import { countSquats } from './squatCounter';
 import { countPushups } from './pushUpCounter';
 
 function PoseTrackingApp() {
-    const [squatStatus, setSquatStatus] = useState('');
     const [exercType, setExercType] = useState('');
     const webcamRef = useRef(null);
     const canvasRef = useRef(null);
@@ -19,6 +18,7 @@ function PoseTrackingApp() {
     const { exerciseType, reps, maxTime } = location.state || {};
     const [status, setStatus] = useState('');
     const [timeRemaining, setTimeRemaining] = useState(maxTime);
+    const [hasFinished, setHasFinished] = useState(false);
 
     const cameraRef = useRef(null);
     const isMobile = window.innerWidth <= 768;
@@ -45,66 +45,70 @@ function PoseTrackingApp() {
     };
 
     const onResults = (results) => {
-        if (!results.poseLandmarks) return;
+        try {
+            if (!results.poseLandmarks) return;
 
-        const videoWidth = webcamRef.current.video.videoWidth;
-        const videoHeight = webcamRef.current.video.videoHeight;
+            const videoWidth = webcamRef.current.video.videoWidth;
+            const videoHeight = webcamRef.current.video.videoHeight;
 
-        canvasRef.current.width = videoWidth;
-        canvasRef.current.height = videoHeight;
+            canvasRef.current.width = videoWidth;
+            canvasRef.current.height = videoHeight;
 
-        const canvasElement = canvasRef.current;
-        const canvasCtx = canvasElement.getContext('2d');
+            const canvasElement = canvasRef.current;
+            const canvasCtx = canvasElement.getContext('2d');
 
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-        drawLandmarks(canvasCtx, results.poseLandmarks, {
-            color: '#FF0000',
-            lineWidth: 0.1,
-        });
+            drawLandmarks(canvasCtx, results.poseLandmarks, {
+                color: '#FF0000',
+                lineWidth: 0.1,
+            });
 
-        const bodyConnections = [
-            [11, 13],
-            [13, 15],
-            [12, 14],
-            [14, 16],
-            [11, 12],
-            [11, 23],
-            [12, 24],
-            [23, 25],
-            [25, 27],
-            [24, 26],
-            [26, 28],
-            [23, 24],
-            [27, 29],
-            [28, 30],
-        ];
+            const bodyConnections = [
+                [11, 13],
+                [13, 15],
+                [12, 14],
+                [14, 16],
+                [11, 12],
+                [11, 23],
+                [12, 24],
+                [23, 25],
+                [25, 27],
+                [24, 26],
+                [26, 28],
+                [23, 24],
+                [27, 29],
+                [28, 30],
+            ];
 
-        bodyConnections.forEach(([start, end]) => {
-            const startLandmark = results.poseLandmarks[start];
-            const endLandmark = results.poseLandmarks[end];
+            bodyConnections.forEach(([start, end]) => {
+                const startLandmark = results.poseLandmarks[start];
+                const endLandmark = results.poseLandmarks[end];
 
-            canvasCtx.beginPath();
-            canvasCtx.moveTo(startLandmark.x * canvasElement.width, startLandmark.y * canvasElement.height);
-            canvasCtx.lineTo(endLandmark.x * canvasElement.width, endLandmark.y * canvasElement.height);
-            canvasCtx.strokeStyle = '#FFFFFF';
-            canvasCtx.lineWidth = 2;
-            canvasCtx.stroke();
-        });
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(startLandmark.x * canvasElement.width, startLandmark.y * canvasElement.height);
+                canvasCtx.lineTo(endLandmark.x * canvasElement.width, endLandmark.y * canvasElement.height);
+                canvasCtx.strokeStyle = '#FFFFFF';
+                canvasCtx.lineWidth = 2;
+                canvasCtx.stroke();
+            });
 
-        setExercType(exerciseType);
-        if (exerciseType === 'Squat') {
-            if (squatData.squatCount > 0) {
-                setSquatData((prevState) => countSquats(results.poseLandmarks, prevState));
+            setExercType(exerciseType);
+            if (exerciseType === 'Squat') {
+                if (squatData.squatCount > 0) {
+                    setSquatData((prevState) => countSquats(results.poseLandmarks, prevState));
+                }
+            } else if (exerciseType === 'PushUp') {
+                if (pushupData.pushupCount > 0) {
+                    setPushupData((prevState) => countPushups(results.poseLandmarks, prevState));
+                }
             }
-        } else if (exerciseType === 'PushUp') {
-            if (pushupData.pushupCount > 0) {
-                setPushupData((prevState) => countPushups(results.poseLandmarks, prevState));
-            }
+
+            canvasCtx.restore();
+        } catch (error) {
+            console.log(error);
         }
-
-        canvasCtx.restore();
     };
 
     useEffect(() => {
@@ -114,15 +118,29 @@ function PoseTrackingApp() {
         const initializeCamera = () => {
             if (webcamRef.current && webcamRef.current.video.readyState === 4) {
                 if (!cameraInitialized) {
-                    cameraRef.current = new cam.Camera(webcamRef.current.video, {
-                        onFrame: async () => {
-                            await pose.send({ image: webcamRef.current.video });
-                        },
-                        width: 640,
-                        height: 480,
-                    });
-                    cameraRef.current.start();
-                    cameraInitialized = true;
+                    try {
+                        cameraRef.current = new cam.Camera(webcamRef.current.video, {
+                            onFrame: async () => {
+                                // Ensure the video object is available before sending
+                                if (webcamRef.current && webcamRef.current.video) {
+                                    try {
+                                        await pose.send({ image: webcamRef.current.video });
+                                    } catch (error) {
+                                        console.error('Error during pose.send:', error);
+                                    }
+                                } else {
+                                    console.error('Webcam video not available');
+                                }
+                            },
+                            width: 640,
+                            height: 480,
+                        });
+
+                        cameraRef.current.start();
+                        cameraInitialized = true;
+                    } catch (error) {
+                        console.error('Error initializing camera:', error);
+                    }
                 }
             } else {
                 setTimeout(initializeCamera, 100);
@@ -153,7 +171,9 @@ function PoseTrackingApp() {
             setTimeRemaining((prev) => Math.max(prev - 1, 0));
         }, 1000);
 
-        if (timeRemaining === 0 || (squatData.squatCount === 0 && pushupData.pushupCount === 0)) {
+        if (timeRemaining === 0 || squatData.squatCount === 0 || pushupData.pushupCount === 0) {
+            console.log('I AM SETTING STOP  ');
+            setHasFinished(true);
             stopWebcam();
         }
 
@@ -164,11 +184,11 @@ function PoseTrackingApp() {
         <div
             style={{
                 position: 'relative',
-                width: '100vw', // Full screen width
-                height: '90vh', // Full screen height
+                width: '100vw',
+                height: '90vh',
                 margin: 'auto',
                 textAlign: 'center',
-                backgroundColor: '#121212', // Consistent background
+                backgroundColor: '#121212',
             }}
         >
             {/* Top Bar */}
@@ -177,9 +197,9 @@ function PoseTrackingApp() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    position: 'fixed', // Sticks to the top
+                    position: 'fixed',
                     top: 0,
-                    width: '100%', // Full screen width
+                    width: '100%',
                     backgroundColor: '#121212',
                     padding: isMobile ? '10px' : '20px',
                     boxSizing: 'border-box',
@@ -187,7 +207,6 @@ function PoseTrackingApp() {
                     color: 'white',
                 }}
             >
-                {/* Back Button */}
                 <Button
                     onClick={() => resetState()}
                     variant="text"
@@ -200,17 +219,16 @@ function PoseTrackingApp() {
                     {'< Back'}
                 </Button>
 
-                {/* Exercise Title */}
                 <Typography
                     variant="h4"
                     gutterBottom
                     sx={{
                         marginLeft: '-80px',
-                        flex: 1, // Take the remaining space
+                        flex: 1,
                         textAlign: 'center',
                         color: 'white',
-                        fontSize: isMobile ? '26px' : '32px', // Larger font size for mobile
-                        fontWeight: 'bold', // Make title more prominent
+                        fontSize: isMobile ? '26px' : '32px',
+                        fontWeight: 'bold',
                     }}
                 >
                     {exerciseType} Analysis
@@ -224,21 +242,20 @@ function PoseTrackingApp() {
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginTop: isMobile ? '50px' : '80px', // Adjust for the top bar height
+                    marginTop: isMobile ? '50px' : '80px',
                     position: 'relative',
-                    height: 'calc(100% - 80px)', // Adjust for the top bar height
+                    height: 'calc(100% - 80px)',
                     overflow: 'hidden',
                 }}
             >
-                {/* Webcam and Canvas Container */}
-
-                {timeRemaining > 0 ? (
+                {/* Conditional Rendering for Webcam/Canvas or Rive Animation */}
+                {!hasFinished ? (
                     <div
                         style={{
                             position: 'relative',
-                            width: isMobile ? '90%' : '640px', // Maintain aspect ratio on different devices
-                            height: isMobile ? '60%' : '480px', // Maintain aspect ratio
-                            marginTop: '-150px', // Move up slightly on mobile
+                            width: isMobile ? '90%' : '640px',
+                            height: isMobile ? '60%' : '480px',
+                            marginTop: '-150px',
                         }}
                     >
                         {/* Webcam */}
@@ -248,10 +265,10 @@ function PoseTrackingApp() {
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
-                                width: '100%', // Match container width
-                                height: '100%', // Match container height
+                                width: '100%',
+                                height: '100%',
                                 zIndex: 1,
-                                objectFit: 'cover', // Adjust to fill the container
+                                objectFit: 'cover',
                             }}
                         />
 
@@ -263,14 +280,29 @@ function PoseTrackingApp() {
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
-                                width: '100%', // Match container width
-                                height: '100%', // Match container height
-                                zIndex: 2, // Above the webcam
+                                width: '100%',
+                                height: '100%',
+                                zIndex: 2,
                             }}
                         ></canvas>
                     </div>
                 ) : (
-                    <></>
+                    <div>
+                        <Typography sx={{ color: 'white', marginBottom: '20px' }} variant="h4">
+                            Workout Complete!
+                        </Typography>
+                        <Rive
+                            src={squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'exercise_completed.riv' : 'exercise_not_completed.riv'}
+                            stateMachines={squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'done' : 'notDone'}
+                            style={{
+                                zIndex: 10,
+                                width: isMobile ? '160px' : '320px',
+                                height: isMobile ? '160px' : '320px',
+                            }}
+                            onLoad={() => console.log('Rive Loaded')}
+                            onError={(error) => console.error('Rive Load Error:', error)}
+                        />
+                    </div>
                 )}
             </div>
 
@@ -278,11 +310,11 @@ function PoseTrackingApp() {
             <div
                 style={{
                     position: 'absolute',
-                    bottom: '60px', // Spacing from the bottom
+                    bottom: '60px',
                     width: '100%',
                     textAlign: 'center',
                     color: 'white',
-                    fontSize: isMobile ? '16px' : '24px', // Adjust font size for screen size
+                    fontSize: isMobile ? '16px' : '24px',
                     zIndex: 3,
                     display: 'flex',
                     justifyContent: 'center',
@@ -320,17 +352,9 @@ function PoseTrackingApp() {
                                 alignItems: 'center',
                             }}
                         >
-                            {exercType === 'Squat' && squatData.squatCount > 0
-                                ? squatData.squatCount > 0 && (
-                                      <Typography sx={{ color: 'white' }} variant="h4">
-                                          {squatData.squatCount}
-                                      </Typography>
-                                  )
-                                : pushupData.pushupCount > 0 && (
-                                      <Typography sx={{ color: 'white' }} variant="h4">
-                                          {pushupData.pushupCount}
-                                      </Typography>
-                                  )}
+                            <Typography sx={{ color: 'white' }} variant="h4">
+                                {exercType === 'Squat' ? squatData.squatCount : pushupData.pushupCount}
+                            </Typography>
                         </Box>
                     </Box>
 
