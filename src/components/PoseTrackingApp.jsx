@@ -3,21 +3,34 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Webcam from 'react-webcam';
 import { Pose } from '@mediapipe/pose';
 import * as cam from '@mediapipe/camera_utils';
+
 import { drawLandmarks } from '@mediapipe/drawing_utils';
-import { Button, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
+import { countSquats } from './squatCounter';
+import { countPushups } from './pushUpCounter';
 
 function PoseTrackingApp() {
     const [squatStatus, setSquatStatus] = useState('');
+    const [exercType, setExercType] = useState('');
     const webcamRef = useRef(null);
     const canvasRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
     const { exerciseType, reps } = location.state || {};
     const [status, setStatus] = useState('');
+
     const cameraRef = useRef(null);
 
     // Media query for mobile responsiveness
     const isMobile = window.innerWidth <= 768;
+    const [squatData, setSquatData] = useState({
+        squatCount: reps,
+        squatFlag: false,
+    });
+    const [pushupData, setPushupData] = useState({
+        pushupCount: reps,
+        pushupFlag: false,
+    });
 
     const checkSquatPosition = (landmarks) => {
         const hipLeft = landmarks[23];
@@ -119,10 +132,25 @@ function PoseTrackingApp() {
             canvasCtx.stroke();
         });
 
+        setExercType(exerciseType);
         if (exerciseType === 'Squat') {
             checkSquatPosition(results.poseLandmarks);
+
+            if (squatData.squatCount > 0) {
+                setSquatData((prevState) => {
+                    const newState = countSquats(results.poseLandmarks, prevState);
+                    //console.log("Stato aggiornato:", newState);
+                    return newState;
+                });
+            }
         } else if (exerciseType === 'PushUp') {
-            checkPushUpPosition(results.poseLandmarks);
+            if (pushupData.pushupCount > 0) {
+                setPushupData((prevState) => {
+                    const newState = countPushups(results.poseLandmarks, prevState);
+                    //console.log("Stato aggiornato:", newState);
+                    return newState;
+                });
+            }
         }
 
         canvasCtx.restore();
@@ -175,6 +203,27 @@ function PoseTrackingApp() {
         };
     }, [exerciseType]);
 
+    useEffect(() => {
+        if (squatData.squatCount > 0) {
+            console.log('squatData: ', squatData.squatCount);
+        }
+
+        if (pushupData.pushupCount > 0) {
+            console.log('pushupData: ', pushupData.pushupCount);
+        }
+    }, [squatData, pushupData]);
+
+    // Function to stop the webcam
+    const stopWebcam = () => {
+        cameraRef.current.stop();
+        cameraRef.current = null;
+    };
+
+    const resetState = () => {
+        stopWebcam(); // ferma la webcam se attiva
+        navigate('/');
+    };
+
     return (
         <div
             style={{
@@ -204,7 +253,7 @@ function PoseTrackingApp() {
             >
                 {/* Back Button */}
                 <Button
-                    onClick={() => navigate('/')}
+                    onClick={() => resetState()}
                     variant="text"
                     sx={{
                         color: '#5955F4',
@@ -294,9 +343,40 @@ function PoseTrackingApp() {
                     color: 'white',
                     fontSize: isMobile ? '16px' : '24px', // Adjust font size for screen size
                     zIndex: 3,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
                 }}
             >
-                <p>{squatStatus || status}</p>
+                {/*                 <p>{squatStatus || status}</p> */}
+
+                <Box
+                    sx={{
+                        flexDirection: 'column',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Typography sx={{ marginBottom: '12px' }} variant="h5">
+                        Remaining reps:
+                    </Typography>
+                    <Box
+                        sx={{
+                            backgroundColor: '#383837',
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
+                        {exercType === 'Squat' && squatData.squatCount > 0
+                            ? squatData.squatCount > 0 && <Typography variant="h4">{squatData.squatCount}</Typography>
+                            : pushupData.pushupCount > 0 && <Typography variant="h4">{pushupData.pushupCount}</Typography>}
+                    </Box>
+                </Box>
             </div>
         </div>
     );
