@@ -180,7 +180,7 @@ function PoseTrackingApp() {
             style={{
                 position: 'relative',
                 width: '100vw', // Full screen width
-                height: '100vh', // Full screen height
+                height: '90vh', // Full screen height
                 margin: 'auto',
                 textAlign: 'center',
                 backgroundColor: '#121212', // Consistent background
