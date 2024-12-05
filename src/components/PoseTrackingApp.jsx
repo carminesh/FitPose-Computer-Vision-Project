@@ -364,9 +364,9 @@ function PoseTrackingApp() {
                     <Box
                         sx={{
                             backgroundColor: '#383837',
-                            width: '120px',
-                            height: '120px',
-                            borderRadius: '10px',
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '8px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
