@@ -16,13 +16,13 @@ function PoseTrackingApp() {
     const canvasRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
-    const { exerciseType, reps } = location.state || {};
+    const { exerciseType, reps, maxTime } = location.state || {};
     const [status, setStatus] = useState('');
+    const [timeRemaining, setTimeRemaining] = useState(maxTime);
 
     const cameraRef = useRef(null);
-
-    // Media query for mobile responsiveness
     const isMobile = window.innerWidth <= 768;
+
     const [squatData, setSquatData] = useState({
         squatCount: reps,
         squatFlag: false,
@@ -32,55 +32,16 @@ function PoseTrackingApp() {
         pushupFlag: false,
     });
 
-    const checkSquatPosition = (landmarks) => {
-        const hipLeft = landmarks[23];
-        const hipRight = landmarks[24];
-        const kneeLeft = landmarks[25];
-        const kneeRight = landmarks[26];
-        const ankleLeft = landmarks[27];
-        const ankleRight = landmarks[28];
-
-        const hipsLowerThanKnees = hipLeft.y > kneeLeft.y && hipRight.y > kneeRight.y;
-
-        const kneesInFrontOfAnkles = kneeLeft.y < ankleLeft.y && kneeRight.y < ankleRight.y;
-
-        if (hipsLowerThanKnees && kneesInFrontOfAnkles) {
-            setSquatStatus('Correct position');
-        } else {
-            setSquatStatus('Incorrect position');
+    const stopWebcam = () => {
+        if (cameraRef.current) {
+            cameraRef.current.stop();
+            cameraRef.current = null;
         }
     };
 
-    const checkPushUpPosition = (landmarks) => {
-        const shoulderLeft = landmarks[11];
-        const shoulderRight = landmarks[12];
-        const hipLeft = landmarks[23];
-        const hipRight = landmarks[24];
-        const elbowLeft = landmarks[13];
-        const elbowRight = landmarks[14];
-
-        const leftElbowAngle = calculateAngle(shoulderLeft, elbowLeft, hipLeft);
-        const rightElbowAngle = calculateAngle(shoulderRight, elbowRight, hipRight);
-
-        const isAligned = Math.abs(hipLeft.y - shoulderLeft.y) < 0.1;
-
-        if (leftElbowAngle < 100 && rightElbowAngle < 100 && isAligned) {
-            setStatus('Correct Push-Up');
-        } else {
-            setStatus('Incorrect Push-Up');
-        }
-    };
-
-    const calculateAngle = (p1, p2, p3) => {
-        const dx1 = p1.x - p2.x;
-        const dy1 = p1.y - p2.y;
-        const dx2 = p3.x - p2.x;
-        const dy2 = p3.y - p2.y;
-        const dotProduct = dx1 * dx2 + dy1 * dy2;
-        const magnitude1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-        const magnitude2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-        const angle = Math.acos(dotProduct / (magnitude1 * magnitude2));
-        return (angle * 180) / Math.PI;
+    const resetState = () => {
+        stopWebcam();
+        navigate('/');
     };
 
     const onResults = (results) => {
@@ -134,22 +95,12 @@ function PoseTrackingApp() {
 
         setExercType(exerciseType);
         if (exerciseType === 'Squat') {
-            checkSquatPosition(results.poseLandmarks);
-
             if (squatData.squatCount > 0) {
-                setSquatData((prevState) => {
-                    const newState = countSquats(results.poseLandmarks, prevState);
-                    //console.log("Stato aggiornato:", newState);
-                    return newState;
-                });
+                setSquatData((prevState) => countSquats(results.poseLandmarks, prevState));
             }
         } else if (exerciseType === 'PushUp') {
             if (pushupData.pushupCount > 0) {
-                setPushupData((prevState) => {
-                    const newState = countPushups(results.poseLandmarks, prevState);
-                    //console.log("Stato aggiornato:", newState);
-                    return newState;
-                });
+                setPushupData((prevState) => countPushups(results.poseLandmarks, prevState));
             }
         }
 
@@ -174,7 +125,6 @@ function PoseTrackingApp() {
                     cameraInitialized = true;
                 }
             } else {
-                // Retry initialization after 100ms if webcam video is not ready
                 setTimeout(initializeCamera, 100);
             }
         };
@@ -195,34 +145,20 @@ function PoseTrackingApp() {
         pose.onResults(onResults);
         initializeCamera();
 
-        return () => {
-            if (cameraRef.current) {
-                cameraRef.current.stop();
-                cameraRef.current = null;
-            }
-        };
+        return () => stopWebcam();
     }, [exerciseType]);
 
     useEffect(() => {
-        if (squatData.squatCount > 0) {
-            console.log('squatData: ', squatData.squatCount);
+        const timer = setInterval(() => {
+            setTimeRemaining((prev) => Math.max(prev - 1, 0));
+        }, 1000);
+
+        if (timeRemaining === 0 || (squatData.squatCount === 0 && pushupData.pushupCount === 0)) {
+            stopWebcam();
         }
 
-        if (pushupData.pushupCount > 0) {
-            console.log('pushupData: ', pushupData.pushupCount);
-        }
-    }, [squatData, pushupData]);
-
-    // Function to stop the webcam
-    const stopWebcam = () => {
-        cameraRef.current.stop();
-        cameraRef.current = null;
-    };
-
-    const resetState = () => {
-        stopWebcam(); // ferma la webcam se attiva
-        navigate('/');
-    };
+        return () => clearInterval(timer);
+    }, [timeRemaining, squatData.squatCount, pushupData.pushupCount]);
 
     return (
         <div
@@ -295,42 +231,47 @@ function PoseTrackingApp() {
                 }}
             >
                 {/* Webcam and Canvas Container */}
-                <div
-                    style={{
-                        position: 'relative',
-                        width: isMobile ? '90%' : '640px', // Maintain aspect ratio on different devices
-                        height: isMobile ? '60%' : '480px', // Maintain aspect ratio
-                        marginTop: '-150px', // Move up slightly on mobile
-                    }}
-                >
-                    {/* Webcam */}
-                    <Webcam
-                        ref={webcamRef}
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%', // Match container width
-                            height: '100%', // Match container height
-                            zIndex: 1,
-                            objectFit: 'cover', // Adjust to fill the container
-                        }}
-                    />
 
-                    {/* Canvas */}
-                    <canvas
-                        ref={canvasRef}
-                        className="output_canvas"
+                {timeRemaining > 0 ? (
+                    <div
                         style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%', // Match container width
-                            height: '100%', // Match container height
-                            zIndex: 2, // Above the webcam
+                            position: 'relative',
+                            width: isMobile ? '90%' : '640px', // Maintain aspect ratio on different devices
+                            height: isMobile ? '60%' : '480px', // Maintain aspect ratio
+                            marginTop: '-150px', // Move up slightly on mobile
                         }}
-                    ></canvas>
-                </div>
+                    >
+                        {/* Webcam */}
+                        <Webcam
+                            ref={webcamRef}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%', // Match container width
+                                height: '100%', // Match container height
+                                zIndex: 1,
+                                objectFit: 'cover', // Adjust to fill the container
+                            }}
+                        />
+
+                        {/* Canvas */}
+                        <canvas
+                            ref={canvasRef}
+                            className="output_canvas"
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%', // Match container width
+                                height: '100%', // Match container height
+                                zIndex: 2, // Above the webcam
+                            }}
+                        ></canvas>
+                    </div>
+                ) : (
+                    <></>
+                )}
             </div>
 
             {/* Status Label */}
@@ -348,33 +289,79 @@ function PoseTrackingApp() {
                     alignItems: 'center',
                 }}
             >
-                {/*                 <p>{squatStatus || status}</p> */}
-
                 <Box
                     sx={{
-                        flexDirection: 'column',
+                        flexDirection: 'row',
                         display: 'flex',
-                        justifyContent: 'center',
+                        justifyContent: 'space-around',
                         alignItems: 'center',
                     }}
                 >
-                    <Typography sx={{ marginBottom: '12px' }} variant="h5">
-                        Remaining reps:
-                    </Typography>
                     <Box
                         sx={{
-                            backgroundColor: '#383837',
-                            width: '100px',
-                            height: '100px',
-                            borderRadius: '8px',
+                            flexDirection: 'column',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
+                            padding: isMobile ? 5 : 6,
                         }}
                     >
-                        {exercType === 'Squat' && squatData.squatCount > 0
-                            ? squatData.squatCount > 0 && <Typography variant="h4">{squatData.squatCount}</Typography>
-                            : pushupData.pushupCount > 0 && <Typography variant="h4">{pushupData.pushupCount}</Typography>}
+                        <Typography sx={{ marginBottom: '12px', color: 'white' }} variant="h5">
+                            Left reps:
+                        </Typography>
+                        <Box
+                            sx={{
+                                backgroundColor: '#383837',
+                                width: '100px',
+                                height: '100px',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            {exercType === 'Squat' && squatData.squatCount > 0
+                                ? squatData.squatCount > 0 && (
+                                      <Typography sx={{ color: 'white' }} variant="h4">
+                                          {squatData.squatCount}
+                                      </Typography>
+                                  )
+                                : pushupData.pushupCount > 0 && (
+                                      <Typography sx={{ color: 'white' }} variant="h4">
+                                          {pushupData.pushupCount}
+                                      </Typography>
+                                  )}
+                        </Box>
+                    </Box>
+
+                    <Box
+                        sx={{
+                            flexDirection: 'column',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: isMobile ? 5 : 6,
+                        }}
+                    >
+                        <Typography sx={{ marginBottom: '12px', color: 'white' }} variant="h5">
+                            Time Left:
+                        </Typography>
+
+                        <Box
+                            sx={{
+                                backgroundColor: '#383837',
+                                width: '100px',
+                                height: '100px',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Typography sx={{ color: 'white' }} variant="h4">
+                                {timeRemaining}s
+                            </Typography>
+                        </Box>
                     </Box>
                 </Box>
             </div>
