@@ -113,20 +113,6 @@ function ExerciseConfigPage() {
                         height: 'auto',
                     }}
                 />
-                <Typography
-                    variant="subtitle2"
-                    sx={{
-                        color: 'white',
-                        fontSize: '18px',
-                        textAlign: 'left',
-                    }}
-                >
-                    {selectedExercise.hints.map((hint, index) => (
-                        <React.Fragment key={index}>
-                            - {hint} <br />
-                        </React.Fragment>
-                    ))}
-                </Typography>
             </Box>
 
             {/* Main Content */}
@@ -141,6 +127,29 @@ function ExerciseConfigPage() {
                     width: isMobile ? '100%' : '500px',
                 }}
             >
+                <Typography
+                    variant="subtitle2"
+                    sx={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        width: '100%',
+                        marginBottom: '40px',
+                        padding: 2,
+                        paddingY: 3,
+                        borderRadius: '18px',
+                        color: 'white',
+                        fontSize: '18px',
+                        textAlign: 'left',
+                        border: 0.5,
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                    }}
+                >
+                    {selectedExercise.hints.map((hint, index) => (
+                        <React.Fragment key={index}>
+                            - {hint} <br />
+                        </React.Fragment>
+                    ))}
+                </Typography>
+
                 <TextField
                     label="Enter Repetitions"
                     type="text"
