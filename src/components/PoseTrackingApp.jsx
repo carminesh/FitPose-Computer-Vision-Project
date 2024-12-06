@@ -172,7 +172,6 @@ function PoseTrackingApp() {
         }, 1000);
 
         if (timeRemaining === 0 || squatData.squatCount === 0 || pushupData.pushupCount === 0) {
-            console.log('I AM SETTING STOP  ');
             setHasFinished(true);
             stopWebcam();
         }
@@ -223,6 +222,7 @@ function PoseTrackingApp() {
                     variant="h4"
                     gutterBottom
                     sx={{
+                        paddingTop: isMobile ? '20px' : '0px',
                         marginLeft: '-80px',
                         flex: 1,
                         textAlign: 'center',
@@ -288,13 +288,14 @@ function PoseTrackingApp() {
                     </div>
                 ) : (
                     <div>
-                        <Typography sx={{ color: 'white', marginBottom: '20px' }} variant="h4">
-                            Workout Complete!
+                        <Typography sx={{ color: 'white', paddingBottom: '60px' }} variant="h4">
+                            {squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'Workout complete' : `Don't give up, try again!`}
                         </Typography>
                         <Rive
                             src={squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'exercise_completed.riv' : 'exercise_not_completed.riv'}
                             stateMachines={squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'done' : 'notDone'}
                             style={{
+                                marginLeft: '20px',
                                 zIndex: 10,
                                 width: isMobile ? '160px' : '320px',
                                 height: isMobile ? '160px' : '320px',
@@ -307,88 +308,98 @@ function PoseTrackingApp() {
             </div>
 
             {/* Status Label */}
-            <div
-                style={{
-                    position: 'absolute',
-                    bottom: '60px',
-                    width: '100%',
-                    textAlign: 'center',
-                    color: 'white',
-                    fontSize: isMobile ? '16px' : '24px',
-                    zIndex: 3,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}
-            >
-                <Box
-                    sx={{
-                        flexDirection: 'row',
+            {squatData.squatCount === 0 || pushupData.pushupCount === 0 ? (
+                <></>
+            ) : (
+                <div
+                    style={{
+                        position: 'absolute',
+                        bottom: '60px',
+                        width: '100%',
+                        textAlign: 'center',
+                        color: 'white',
+                        fontSize: isMobile ? '16px' : '24px',
+                        zIndex: 3,
                         display: 'flex',
-                        justifyContent: 'space-around',
+                        justifyContent: 'center',
                         alignItems: 'center',
                     }}
                 >
                     <Box
                         sx={{
-                            flexDirection: 'column',
+                            flexDirection: 'row',
                             display: 'flex',
-                            justifyContent: 'center',
+                            justifyContent: 'space-around',
                             alignItems: 'center',
-                            padding: isMobile ? 5 : 6,
                         }}
                     >
-                        <Typography sx={{ marginBottom: '12px', color: 'white' }} variant="h5">
-                            Left reps:
-                        </Typography>
                         <Box
                             sx={{
-                                backgroundColor: '#383837',
-                                width: '100px',
-                                height: '100px',
-                                borderRadius: '8px',
+                                flexDirection: 'column',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
+                                padding: isMobile ? 5 : 6,
                             }}
                         >
-                            <Typography sx={{ color: 'white' }} variant="h4">
-                                {exercType === 'Squat' ? squatData.squatCount : pushupData.pushupCount}
+                            <Typography sx={{ marginBottom: '12px', color: 'white' }} variant="h6">
+                                {timeRemaining === 0 ? 'Completed reps:' : 'Left reps:'}
                             </Typography>
+                            <Box
+                                sx={{
+                                    backgroundColor: '#383837',
+                                    width: '100px',
+                                    height: '100px',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Typography sx={{ color: 'white' }} variant="h4">
+                                    {timeRemaining === 0
+                                        ? exerciseType === 'Squat'
+                                            ? reps - squatData.squatCount
+                                            : reps - pushupData.pushupCount
+                                        : exercType === 'Squat'
+                                        ? squatData.squatCount
+                                        : pushupData.pushupCount}
+                                </Typography>
+                            </Box>
                         </Box>
-                    </Box>
-
-                    <Box
-                        sx={{
-                            flexDirection: 'column',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            padding: isMobile ? 5 : 6,
-                        }}
-                    >
-                        <Typography sx={{ marginBottom: '12px', color: 'white' }} variant="h5">
-                            Time Left:
-                        </Typography>
 
                         <Box
                             sx={{
-                                backgroundColor: '#383837',
-                                width: '100px',
-                                height: '100px',
-                                borderRadius: '8px',
+                                flexDirection: 'column',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
+                                padding: isMobile ? 5 : 6,
                             }}
                         >
-                            <Typography sx={{ color: 'white' }} variant="h4">
-                                {timeRemaining}s
+                            <Typography sx={{ marginBottom: '12px', color: 'white' }} variant="h6">
+                                {timeRemaining === 0 ? 'In:' : 'Time Left:'}
                             </Typography>
+
+                            <Box
+                                sx={{
+                                    backgroundColor: '#383837',
+                                    width: '100px',
+                                    height: '100px',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Typography sx={{ color: 'white' }} variant="h4">
+                                    {timeRemaining === 0 ? `${maxTime} s` : `${timeRemaining} s`}
+                                </Typography>
+                            </Box>
                         </Box>
                     </Box>
-                </Box>
-            </div>
+                </div>
+            )}
         </div>
     );
 }

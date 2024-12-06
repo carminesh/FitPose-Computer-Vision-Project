@@ -44,19 +44,52 @@ function ExerciseConfigPage() {
                 maxWidth: '100%',
             }}
         >
-            <Typography
-                variant="h4"
-                gutterBottom
-                sx={{
+            {/* Top Bar with Back Button */}
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    position: 'fixed',
+                    top: 0,
+                    width: '100%',
+                    backgroundColor: '#121212',
+                    padding: isMobile ? '10px' : '20px',
+                    boxSizing: 'border-box',
+                    zIndex: 10,
                     color: 'white',
-                    fontSize: isMobile ? '26px' : '32px',
-                    fontWeight: 'bold',
-                    marginTop: isMobile ? '40px' : '0',
                 }}
             >
-                {exerciseType} Configuration
-            </Typography>
+                <Button
+                    onClick={() => navigate('/')}
+                    variant="text"
+                    sx={{
+                        color: '#5955F4',
+                        fontSize: '16px',
+                        cursor: 'pointer',
+                    }}
+                >
+                    {'< Back'}
+                </Button>
 
+                <Typography
+                    variant="h4"
+                    gutterBottom
+                    sx={{
+                        paddingTop: isMobile ? '20px' : '0px',
+                        paddingRight: '70px',
+                        flex: 1,
+                        textAlign: 'center',
+                        color: 'white',
+                        fontSize: isMobile ? '26px' : '32px',
+                        fontWeight: 'bold',
+                    }}
+                >
+                    Configuration
+                </Typography>
+            </div>
+
+            {/* Main Content */}
             <Box
                 sx={{
                     display: 'flex',
@@ -66,6 +99,7 @@ function ExerciseConfigPage() {
                     alignItems: 'center',
                     flexGrow: 1,
                     width: isMobile ? '100%' : '500px',
+                    marginTop: '80px', // Adjust for the top bar
                 }}
             >
                 <TextField
