@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Container, TextField, Typography } from '@mui/material';
 import { useMediaQuery } from 'react-responsive';
+import SquatIllustration from '../resources/squat-exercise.svg';
+import PushUpIllustration from '../resources/pushup-exercise.svg';
 
 function ExerciseConfigPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const { exerciseType } = location.state || {};
     const [reps, setReps] = useState(0);
-    const [maxTime, setMaxTime] = useState(0); // State for max time in seconds
+    const [maxTime, setMaxTime] = useState(0);
 
     const handleStartWorkout = () => {
         if (reps > 0 && maxTime > 0) {
@@ -18,17 +20,19 @@ function ExerciseConfigPage() {
 
     const isMobile = useMediaQuery({ query: '(max-width: 767px)' });
 
-    const handleRepsChange = (e) => {
-        const value = e.target.value.replace(/^0+/, '');
-        const parsedValue = parseInt(value, 10);
-        setReps(isNaN(parsedValue) ? 0 : parsedValue);
+    // Dynamic data based on the exercise type
+    const exerciseData = {
+        squat: {
+            illustration: SquatIllustration,
+            hints: ['Keep your back straight and chest lifted.', 'Ensure your knees don’t go past your toes.', 'Engage your core and breathe steadily.'],
+        },
+        pushup: {
+            illustration: PushUpIllustration,
+            hints: ['Keep your body straight from head to heels.', 'Lower yourself until your elbows are at a 90-degree angle.', 'Push back up while keeping your core engaged.'],
+        },
     };
 
-    const handleMaxTimeChange = (e) => {
-        const value = e.target.value.replace(/^0+/, '');
-        const parsedValue = parseInt(value, 10);
-        setMaxTime(isNaN(parsedValue) ? 0 : parsedValue);
-    };
+    const selectedExercise = exerciseData[exerciseType.toLowerCase()] || exerciseData.squat;
 
     return (
         <Container
@@ -85,9 +89,45 @@ function ExerciseConfigPage() {
                         fontWeight: 'bold',
                     }}
                 >
-                    Configuration
+                    {exerciseType}
                 </Typography>
             </div>
+
+            {/* Illustration and Hints */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
+                    marginBottom: 2,
+                    marginTop: '90px',
+                }}
+            >
+                <Box
+                    component="img"
+                    src={selectedExercise.illustration}
+                    alt={`${exerciseType} Illustration`}
+                    sx={{
+                        width: isMobile ? '60%' : '40%',
+                        height: 'auto',
+                    }}
+                />
+                <Typography
+                    variant="subtitle2"
+                    sx={{
+                        color: 'white',
+                        fontSize: '18px',
+                        textAlign: 'left',
+                    }}
+                >
+                    {selectedExercise.hints.map((hint, index) => (
+                        <React.Fragment key={index}>
+                            - {hint} <br />
+                        </React.Fragment>
+                    ))}
+                </Typography>
+            </Box>
 
             {/* Main Content */}
             <Box
@@ -99,20 +139,25 @@ function ExerciseConfigPage() {
                     alignItems: 'center',
                     flexGrow: 1,
                     width: isMobile ? '100%' : '500px',
-                    marginTop: '80px', // Adjust for the top bar
                 }}
             >
                 <TextField
                     label="Enter Repetitions"
                     type="text"
                     value={reps}
-                    onChange={handleRepsChange}
+                    onChange={(e) => {
+                        const value = e.target.value.replace(/^0+/, '');
+                        const parsedValue = parseInt(value, 10);
+                        setReps(isNaN(parsedValue) ? 0 : parsedValue);
+                    }}
                     variant="outlined"
                     sx={{
                         width: '100%',
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                         borderRadius: '18px',
+                        height: '70px',
                         '& .MuiOutlinedInput-root': {
+                            height: '70px',
                             borderRadius: '18px',
                             color: 'white',
                         },
@@ -128,13 +173,19 @@ function ExerciseConfigPage() {
                     label="Max Time (seconds)"
                     type="text"
                     value={maxTime}
-                    onChange={handleMaxTimeChange}
+                    onChange={(e) => {
+                        const value = e.target.value.replace(/^0+/, '');
+                        const parsedValue = parseInt(value, 10);
+                        setMaxTime(isNaN(parsedValue) ? 0 : parsedValue);
+                    }}
                     variant="outlined"
                     sx={{
                         width: '100%',
+                        height: '70px',
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                         borderRadius: '18px',
                         '& .MuiOutlinedInput-root': {
+                            height: '70px',
                             borderRadius: '18px',
                             color: 'white',
                         },
@@ -155,7 +206,7 @@ function ExerciseConfigPage() {
                         opacity: reps > 0 && maxTime > 0 ? 1 : 0.4,
                         borderRadius: '20px',
                         width: '100%',
-                        height: isMobile ? '60px' : '50px',
+                        height: '70px',
                         padding: isMobile ? '14px' : '16px',
                         fontSize: isMobile ? '20px' : '18px',
                         color: 'white',
