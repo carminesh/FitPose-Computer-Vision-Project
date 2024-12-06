@@ -287,7 +287,13 @@ function PoseTrackingApp() {
                         ></canvas>
                     </div>
                 ) : (
-                    <div>
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                        }}
+                    >
                         <Typography sx={{ color: 'white', paddingBottom: '60px' }} variant="h4">
                             {squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'Workout complete' : `Don't give up, try again!`}
                         </Typography>
