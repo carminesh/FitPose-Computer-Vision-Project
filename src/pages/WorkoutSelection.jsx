@@ -17,43 +17,51 @@ function WorkoutSelection() {
         <Container
             sx={{
                 backgroundColor: '#121212',
-                textAlign: 'center',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between', // Space between title and buttons
+                justifyContent: 'flex-start',
                 alignItems: 'center',
                 height: '100vh', // Full viewport height
-                padding: isMobile ? 2 : 4, // More padding for mobile devices
-                maxWidth: '100%', // Ensure full width on mobile devices
+                padding: isMobile ? 2 : 4,
+                maxWidth: '100%',
             }}
         >
             {/* Title */}
-            <Typography
-                variant={'h4'} // Adjust heading size based on screen size
-                gutterBottom
+            <Box
                 sx={{
-                    color: 'white',
-                    fontSize: isMobile ? '26px' : '32px', // Larger font size for mobile
-                    fontWeight: 'bold', // Make title more prominent
-                    marginTop: isMobile ? '40px' : '0', // Add space above title on mobile
+                    width: '100%',
+                    textAlign: 'center',
+                    marginTop: isMobile ? '40px' : '20px',
                 }}
             >
-                Select a Workout
-            </Typography>
+                <Typography
+                    variant="h4"
+                    gutterBottom
+                    sx={{
+                        color: 'white',
+                        fontSize: isMobile ? '26px' : '32px',
+                        fontWeight: 'bold',
+                    }}
+                >
+                    Select a Workout
+                </Typography>
+                <Typography
+                    variant="body2"
+                    gutterBottom
+                    sx={{
+                        color: 'white',
+                        paddingLeft: '24px',
+                        paddingRight: '24px',
+                        fontSize: isMobile ? '20px' : '24px',
+                        marginTop: isMobile ? '10px' : '0',
+                    }}
+                >
+                    Select the type of exercise you would like to analyse
+                </Typography>
+            </Box>
 
-            <Typography
-                variant={'body2'} // Adjust heading size based on screen size
-                gutterBottom
-                sx={{
-                    color: 'white',
-                    paddingLeft: '24px',
-                    paddingRight: '24px',
-                    fontSize: isMobile ? '20px' : '24px', // Larger font size for mobile
-                    marginTop: isMobile ? '20px' : '0', // Add space above title on mobile
-                }}
-            >
-                Select the type of exercise you would like to analyse
-            </Typography>
+            {/* Spacer to push buttons to the bottom */}
+            <Box sx={{ flexGrow: 1 }}></Box>
 
             {/* Buttons Section */}
             <Box
@@ -63,8 +71,8 @@ function WorkoutSelection() {
                 sx={{
                     justifyContent: 'center',
                     alignItems: 'center',
-                    flexGrow: 1, // Ensures the buttons are centered vertically
-                    minWidth: isMobile ? '400px' : '500px',
+                    width: isMobile ? '100%' : '500px',
+                    marginBottom: isMobile ? '40px' : '60px', // Add spacing from the bottom
                 }}
             >
                 <Button
@@ -74,10 +82,9 @@ function WorkoutSelection() {
                     sx={{
                         backgroundColor: '#5955F4',
                         borderRadius: '20px',
-                        width: '100%', // Wider buttons for mobile
-                        height: '70px', // Increased height for better touch targets on mobile
-                        padding: isMobile ? '14px' : '16px', // Adjust padding for mobile
-                        fontSize: isMobile ? '20px' : '18px', // Larger font size for mobile
+                        width: '100%',
+                        height: '70px',
+                        fontSize: isMobile ? '20px' : '18px',
                     }}
                 >
                     Squat
@@ -89,10 +96,9 @@ function WorkoutSelection() {
                     sx={{
                         backgroundColor: '#5955F4',
                         borderRadius: '20px',
-                        width: '100%', // Wider buttons for mobile
-                        height: '70px', // Increased height for better touch targets on mobile
-                        padding: isMobile ? '14px' : '16px', // Adjust padding for mobile
-                        fontSize: isMobile ? '20px' : '18px', // Larger font size for mobile
+                        width: '100%',
+                        height: '70px',
+                        fontSize: isMobile ? '20px' : '18px',
                     }}
                 >
                     Push Up
@@ -104,10 +110,9 @@ function WorkoutSelection() {
                     sx={{
                         backgroundColor: '#5955F4',
                         borderRadius: '20px',
-                        width: '100%', // Wider buttons for mobile
-                        height: '70px', // Increased height for better touch targets on mobile
-                        padding: isMobile ? '14px' : '16px', // Adjust padding for mobile
-                        fontSize: isMobile ? '20px' : '18px', // Larger font size for mobile
+                        width: '100%',
+                        height: '70px',
+                        fontSize: isMobile ? '20px' : '18px',
                     }}
                 >
                     Biceps Curl

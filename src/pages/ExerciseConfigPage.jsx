@@ -119,7 +119,7 @@ function ExerciseConfigPage() {
                     src={selectedExercise.illustration}
                     alt={`${exerciseType} Illustration`}
                     sx={{
-                        width: isMobile ? '60%' : '40%',
+                        width: isMobile ? '60%' : '30%',
                         height: 'auto',
                     }}
                 />
