@@ -6,8 +6,9 @@ import * as cam from '@mediapipe/camera_utils';
 import Rive from '@rive-app/react-canvas';
 import { drawLandmarks } from '@mediapipe/drawing_utils';
 import { Box, Button, Typography } from '@mui/material';
-import { countSquats } from './squatCounter';
-import { countPushups } from './pushUpCounter';
+import { countSquats } from '../utils/squatCounter';
+import { countPushups } from '../utils/pushUpCounter';
+import { countBicepsCurls } from '../utils/bicepsCurlCounter';
 
 function PoseTrackingApp() {
     const [exercType, setExercType] = useState('');
@@ -19,6 +20,7 @@ function PoseTrackingApp() {
     const [status, setStatus] = useState('');
     const [timeRemaining, setTimeRemaining] = useState(maxTime);
     const [hasFinished, setHasFinished] = useState(false);
+    const [isWebcamReady, setIsWebcamReady] = useState(false);
 
     const cameraRef = useRef(null);
     const isMobile = window.innerWidth <= 768;
@@ -30,6 +32,10 @@ function PoseTrackingApp() {
     const [pushupData, setPushupData] = useState({
         pushupCount: reps,
         pushupFlag: false,
+    });
+    const [bicepsCurlData, setBicepsCurlData] = useState({
+        bicepsCurlCount: reps,
+        bicepsCurlFlag: false,
     });
 
     const stopWebcam = () => {
@@ -103,6 +109,10 @@ function PoseTrackingApp() {
                 if (pushupData.pushupCount > 0) {
                     setPushupData((prevState) => countPushups(results.poseLandmarks, prevState));
                 }
+            } else if (exerciseType === 'BicepsCurl') {
+                if (bicepsCurlData.bicepsCurlCount > 0) {
+                    setBicepsCurlData((prevState) => countBicepsCurls(results.poseLandmarks, prevState));
+                }
             }
 
             canvasCtx.restore();
@@ -138,6 +148,7 @@ function PoseTrackingApp() {
 
                         cameraRef.current.start();
                         cameraInitialized = true;
+                        setIsWebcamReady(true);
                     } catch (error) {
                         console.error('Error initializing camera:', error);
                     }
@@ -167,17 +178,48 @@ function PoseTrackingApp() {
     }, [exerciseType]);
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeRemaining((prev) => Math.max(prev - 1, 0));
-        }, 1000);
+        if (isWebcamReady) {
+            const timer = setInterval(() => {
+                setTimeRemaining((prev) => Math.max(prev - 1, 0));
+            }, 1000);
 
-        if (timeRemaining === 0 || squatData.squatCount === 0 || pushupData.pushupCount === 0) {
-            setHasFinished(true);
-            stopWebcam();
+            if (timeRemaining === 0 || squatData.squatCount === 0 || pushupData.pushupCount === 0 || bicepsCurlData.bicepsCurlCount === 0) {
+                setHasFinished(true);
+                stopWebcam();
+            }
+
+            return () => clearInterval(timer);
         }
+    }, [isWebcamReady, timeRemaining, squatData.squatCount, pushupData.pushupCount, bicepsCurlData.bicepsCurlCount]);
 
-        return () => clearInterval(timer);
-    }, [timeRemaining, squatData.squatCount, pushupData.pushupCount]);
+    // Helper function to get the current rep count
+    const getRepCount = () => {
+        if (timeRemaining === 0) {
+            // When the timer finishes, show how many reps were completed
+            switch (exerciseType) {
+                case 'Squat':
+                    return reps - squatData.squatCount;
+                case 'PushUp':
+                    return reps - pushupData.pushupCount;
+                case 'BicepsCurl':
+                    return reps - bicepsCurlData.bicepsCurlCount;
+                default:
+                    return 0;
+            }
+        } else {
+            // When the timer is still running, show the remaining reps
+            switch (exerciseType) {
+                case 'Squat':
+                    return squatData.squatCount;
+                case 'PushUp':
+                    return pushupData.pushupCount;
+                case 'BicepsCurl':
+                    return bicepsCurlData.bicepsCurlCount;
+                default:
+                    return 0;
+            }
+        }
+    };
 
     return (
         <div
@@ -295,10 +337,10 @@ function PoseTrackingApp() {
                         }}
                     >
                         <Typography sx={{ color: 'white', paddingBottom: '60px' }} variant="h4">
-                            {squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'Workout complete' : `Don't give up, try again!`}
+                            {squatData.squatCount === 0 || pushupData.pushupCount === 0 || bicepsCurlData.bicepsCurlCount === 0 ? 'Workout complete' : `Don't give up, try again!`}
                         </Typography>
                         <Rive
-                            src={squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'exercise_completed.riv' : 'exercise_not_completed.riv'}
+                            src={squatData.squatCount === 0 || pushupData.pushupCount === 0 || bicepsCurlData.bicepsCurlCount === 0 ? 'exercise_completed.riv' : 'exercise_not_completed.riv'}
                             stateMachines={squatData.squatCount === 0 || pushupData.pushupCount === 0 ? 'done' : 'notDone'}
                             style={{
                                 marginLeft: '20px',
@@ -314,7 +356,7 @@ function PoseTrackingApp() {
             </div>
 
             {/* Status Label */}
-            {squatData.squatCount === 0 || pushupData.pushupCount === 0 ? (
+            {squatData.squatCount === 0 || pushupData.pushupCount === 0 || bicepsCurlData.bicepsCurlCount === 0 ? (
                 <></>
             ) : (
                 <div
@@ -363,13 +405,7 @@ function PoseTrackingApp() {
                                 }}
                             >
                                 <Typography sx={{ color: 'white' }} variant="h4">
-                                    {timeRemaining === 0
-                                        ? exerciseType === 'Squat'
-                                            ? reps - squatData.squatCount
-                                            : reps - pushupData.pushupCount
-                                        : exercType === 'Squat'
-                                        ? squatData.squatCount
-                                        : pushupData.pushupCount}
+                                    {getRepCount()}
                                 </Typography>
                             </Box>
                         </Box>

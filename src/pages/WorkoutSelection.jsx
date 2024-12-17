@@ -97,6 +97,21 @@ function WorkoutSelection() {
                 >
                     Push Up
                 </Button>
+                <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => handleWorkoutSelection('Curl')}
+                    sx={{
+                        backgroundColor: '#5955F4',
+                        borderRadius: '20px',
+                        width: '100%', // Wider buttons for mobile
+                        height: '70px', // Increased height for better touch targets on mobile
+                        padding: isMobile ? '14px' : '16px', // Adjust padding for mobile
+                        fontSize: isMobile ? '20px' : '18px', // Larger font size for mobile
+                    }}
+                >
+                    Biceps Curl
+                </Button>
             </Box>
         </Container>
     );

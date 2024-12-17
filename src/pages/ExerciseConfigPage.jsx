@@ -4,6 +4,7 @@ import { Box, Button, Container, TextField, Typography } from '@mui/material';
 import { useMediaQuery } from 'react-responsive';
 import SquatIllustration from '../resources/squat-exercise.svg';
 import PushUpIllustration from '../resources/pushup-exercise.svg';
+import BicepsCurlIllustration from '../resources/biceps-curl-exercise.svg';
 
 function ExerciseConfigPage() {
     const location = useLocation();
@@ -29,6 +30,15 @@ function ExerciseConfigPage() {
         pushup: {
             illustration: PushUpIllustration,
             hints: ['Keep your body straight from head to heels.', 'Lower yourself until your elbows are at a 90-degree angle.', 'Push back up while keeping your core engaged.'],
+        },
+        curl: {
+            illustration: BicepsCurlIllustration,
+            hints: [
+                'Keep your back straight and chest lifted.',
+                'Elbows close to your torso to isolate the biceps.',
+                'Engage your core and breathe steadily.',
+                'Control the movement and avoid swinging.',
+            ],
         },
     };
 
