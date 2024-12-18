@@ -103,7 +103,16 @@ function PoseTrackingApp() {
             setExercType(exerciseType);
             if (exerciseType === 'Squat') {
                 if (squatData.squatCount > 0) {
-                    setSquatData((prevState) => countSquats(results.poseLandmarks, prevState));
+                    //setSquatData((prevState) => countSquats(results.poseLandmarks, prevState));
+                    // Funzione per chiamare countSquats e aggiornare lo stato
+                    const updateSquatData = async (landmarks, prevState) => {
+                        const newState = await countSquats(landmarks, prevState); // Aspetta il risultato della funzione countSquats
+                        setSquatData(newState); // Aggiorna lo stato con il nuovo valore
+                    };
+                    setSquatData((prevState) => {
+                        updateSquatData(results.poseLandmarks, prevState);
+                        return prevState; // Mantieni il valore corrente fino all'aggiornamento
+                    });
                 }
             } else if (exerciseType === 'PushUp') {
                 if (pushupData.pushupCount > 0) {
