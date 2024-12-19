@@ -44,7 +44,7 @@ const predictSquat = async (landmarks) => {
         const prediction = model.predict(inputTensor);
         const predictionValue = prediction.dataSync()[0];
         console.log("predictionValue:", predictionValue);
-        return (predictionValue > 0.25); // True se lo squat è corretto
+        return (predictionValue > 0.2); // True se lo squat è corretto
     } catch (error) {
         console.error("Errore durante la predizione:", error.message);
         return false;
