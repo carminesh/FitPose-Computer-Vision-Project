@@ -116,7 +116,15 @@ function PoseTrackingApp() {
                 }
             } else if (exerciseType === 'PushUp') {
                 if (pushupData.pushupCount > 0) {
-                    setPushupData((prevState) => countPushups(results.poseLandmarks, prevState));
+                    //setPushupData((prevState) => countPushups(results.poseLandmarks, prevState));
+                    const updatePushUp = async (landmarks, prevState) => {
+                        const newState = await countPushups(landmarks, prevState); // Aspetta il risultato della funzione countSquats
+                        setPushupData(newState); // Aggiorna lo stato con il nuovo valore
+                    };
+                    setPushupData((prevState) => {
+                        updatePushUp(results.poseLandmarks, prevState);
+                        return prevState; // Mantieni il valore corrente fino all'aggiornamento
+                    });
                 }
             } else if (exerciseType === 'BicepsCurl') {
                 if (bicepsCurlData.bicepsCurlCount > 0) {
