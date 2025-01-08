@@ -22,4 +22,5 @@ This project uses **MediaPipe** to track and analyze fitness exercises like squa
 -   Webcam-enabled device (for real-time tracking)
 
 ## Demo
-![til](/resources/sqaut_sample_video.gif)
+
+![squat_sample_demo](https://github.com/carminesh/computer-vision-project/blob/master/resources/squat_sample_video.gif)
