@@ -6,7 +6,7 @@ This project uses **MediaPipe** to track and analyze fitness exercises like squa
 
 -   **Real-time Exercise Tracking**: Tracks body movements during exercises.
 -   **Repetition Counter**: Automatically counts the number of repetitions.
--   **Form Evaluation**: Assesses the correctness of exercise form based on predefined thresholds.
+-   **Form Evaluation**: Assesses the correctness of the exercise form based on predefined thresholds.
 -   **Customizable**: Easily extendable for additional exercises.
 
 ## Technology Stack
@@ -20,3 +20,6 @@ This project uses **MediaPipe** to track and analyze fitness exercises like squa
 -   Node.js (v14+ recommended)
 -   NPM or Yarn
 -   Webcam-enabled device (for real-time tracking)
+
+## Demo
+![til](/resources/sqaut_sample_video.gif)
