@@ -11,9 +11,10 @@ This project uses **MediaPipe** to track and analyze fitness exercises like squa
 
 ## Technology Stack
 
--   **MediaPipe**: Used for pose estimation and skeletal tracking.
--   **React.js**: Frontend framework for building the user interface.
--   **React Webcam**: Enables webcam integration in the browser.
+-   **MediaPipe**: Used for pose estimation and skeletal tracking
+-   **React.js**: Frontend framework for building the user interface
+-   **React Webcam**: Enables webcam integration in the browser
+-   **Tensorflow**: Open-source platform for machine learning developed by Google
 
 ## Prerequisites
 
